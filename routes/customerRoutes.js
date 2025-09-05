@@ -13,6 +13,7 @@ const {
   resetPassword,
   getAllCustomers,
   getCustomerById,
+  getCurrentUser,
   updateCustomer,
   deleteCustomer,
   addAllCustomers,
@@ -71,6 +72,9 @@ router.post("/add/all", addAllCustomers);
 
 //get all user
 router.get("/", getAllCustomers);
+
+//get current authenticated user
+router.get("/me", isAuth, getCurrentUser);
 
 //get a user
 router.get("/:id", getCustomerById);

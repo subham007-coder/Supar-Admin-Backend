@@ -38,7 +38,7 @@ const generateAccessToken = (user) => {
 
 const generateRefreshToken = (user) => {
   return jwt.sign(
-    { id: user._id },
+    { _id: user._id },
     process.env.JWT_REFRESH_SECRET,
     { expiresIn: process.env.JWT_REFRESH_LIFETIME || "7d" } // longer-lived
   );
@@ -59,18 +59,43 @@ const tokenForVerify = (user) => {
 
 const isAuth = async (req, res, next) => {
   const { authorization } = req.headers;
-  // console.log("authorization", req.headers);
   console.log(`🔍isAuth ${req.method} : ${req.originalUrl}`);
+  
   try {
+    if (!authorization) {
+      return res.status(401).send({
+        message: "Authorization header is required",
+      });
+    }
+    
+    if (!authorization.startsWith("Bearer ")) {
+      return res.status(401).send({
+        message: "Invalid authorization format. Expected 'Bearer <token>'",
+      });
+    }
+    
     const token = authorization.split(" ")[1];
+    if (!token) {
+      return res.status(401).send({
+        message: "Token not provided",
+      });
+    }
+    
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (err) {
     console.log("error on isAuth", err);
+    
+    let message = "Authentication failed";
+    if (err.name === 'TokenExpiredError') {
+      message = "Token has expired";
+    } else if (err.name === 'JsonWebTokenError') {
+      message = "Invalid token";
+    }
 
     res.status(401).send({
-      message: err.message,
+      message: message,
     });
   }
 };

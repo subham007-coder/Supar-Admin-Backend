@@ -101,45 +101,44 @@ const registerCustomer = async (req, res) => {
   const token = req.params.token;
 
   try {
-    const { name, email, password } = jwt.decode(token);
-
-    // Check if the user is already registered
-    const isAdded = await Customer.findOne({ email });
-
-    if (isAdded) {
-      const accessToken = generateAccessToken(isAdded);
-      const refreshToken = generateRefreshToken(isAdded);
-      await isAdded.save();
-
-      return res.send({
-        refreshToken,
-        token: accessToken,
-        _id: isAdded._id,
-        name: isAdded.name,
-        email: isAdded.email,
-        password: password,
-        message: "Email Already Verified!",
+    if (!token) {
+      return res.status(400).send({
+        message: "Verification token is required!",
       });
     }
 
-    if (token) {
-      jwt.verify(
-        token,
-        process.env.JWT_SECRET_FOR_VERIFY,
-        async (err, decoded) => {
-          if (err) {
-            return res.status(401).send({
-              message: "Token Expired, Please try again!",
-            });
-          }
+    // First verify the JWT token
+    jwt.verify(
+      token,
+      process.env.JWT_SECRET_FOR_VERIFY,
+      async (err, decoded) => {
+        if (err) {
+          return res.status(401).send({
+            message: "Token Expired, Please try again!",
+          });
+        }
 
-          // Create a new user only if not already registered
-          const existingUser = await Customer.findOne({ email });
-          console.log("existingUser");
+        const { name, email, password } = decoded;
 
-          if (existingUser) {
-            return res.status(400).send({ message: "User already exists!" });
-          } else {
+        // Check if the user is already registered
+        const existingUser = await Customer.findOne({ email });
+        
+        if (existingUser) {
+          // User already exists, just generate tokens and return
+          const accessToken = generateAccessToken(existingUser);
+          const refreshToken = generateRefreshToken(existingUser);
+          
+          return res.send({
+            refreshToken,
+            token: accessToken,
+            _id: existingUser._id,
+            name: existingUser.name,
+            email: existingUser.email,
+            message: "Email Already Verified!",
+          });
+        } else {
+          // Create a new user
+          try {
             const newUser = new Customer({
               name,
               email,
@@ -149,19 +148,39 @@ const registerCustomer = async (req, res) => {
             await newUser.save();
             const accessToken = generateAccessToken(newUser);
             const refreshToken = generateRefreshToken(newUser);
-            await newUser.save();
+            
             res.send({
               refreshToken,
               token: accessToken,
               _id: newUser._id,
               name: newUser.name,
               email: newUser.email,
-              message: "Email Verified, Please Login Now!",
+              message: "Email Verified Successfully! You can now login.",
             });
+          } catch (saveError) {
+            // Handle duplicate key error specifically
+            if (saveError.code === 11000) {
+              // User was created between our check and save attempt
+              const existingUser = await Customer.findOne({ email });
+              if (existingUser) {
+                const accessToken = generateAccessToken(existingUser);
+                const refreshToken = generateRefreshToken(existingUser);
+                
+                return res.send({
+                  refreshToken,
+                  token: accessToken,
+                  _id: existingUser._id,
+                  name: existingUser.name,
+                  email: existingUser.email,
+                  message: "Email Already Verified!",
+                });
+              }
+            }
+            throw saveError;
           }
         }
-      );
-    }
+      }
+    );
   } catch (error) {
     console.error("Error during email verification:", error);
     res.status(500).send({
@@ -234,7 +253,7 @@ const refreshToken = async (req, res) => {
     // Verify refresh token
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
 
-    const user = await Customer.findById(decoded.id);
+    const user = await Customer.findById(decoded._id);
     if (!user) return res.status(401).json({ message: "User not found" });
 
     // (Optional) check against DB if you store refresh tokens
@@ -379,6 +398,23 @@ const getCustomerById = async (req, res) => {
   try {
     const customer = await Customer.findById(req.params.id);
     res.send(customer);
+  } catch (err) {
+    res.status(500).send({
+      message: err.message,
+    });
+  }
+};
+
+const getCurrentUser = async (req, res) => {
+  try {
+    // req.user is set by the isAuth middleware
+    const customer = await Customer.findById(req.user._id).select('-password');
+    if (!customer) {
+      return res.status(404).send({
+        message: "User not found",
+      });
+    }
+    res.send({ user: customer });
   } catch (err) {
     res.status(500).send({
       message: err.message,
@@ -583,6 +619,7 @@ module.exports = {
   resetPassword,
   getAllCustomers,
   getCustomerById,
+  getCurrentUser,
   updateCustomer,
   deleteCustomer,
   addShippingAddress,

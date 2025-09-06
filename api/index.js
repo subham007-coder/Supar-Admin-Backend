@@ -20,6 +20,8 @@ const settingRoutes = require("../routes/settingRoutes");
 const currencyRoutes = require("../routes/currencyRoutes");
 const languageRoutes = require("../routes/languageRoutes");
 const notificationRoutes = require("../routes/notificationRoutes");
+const bannerRoutes = require("../routes/bannerRoutes");
+const instaPostRoutes = require("../routes/instaPostRoutes");
 const { isAuth, isAdmin } = require("../config/auth");
 // const {
 //   getGlobalSetting,
@@ -56,6 +58,8 @@ app.use("/v1/setting/", settingRoutes);
 app.use("/v1/currency/", isAuth, currencyRoutes);
 app.use("/v1/language/", languageRoutes);
 app.use("/v1/notification/", isAuth, notificationRoutes);
+app.use("/v1/banners/", bannerRoutes);
+app.use("/v1/insta-posts/", instaPostRoutes);
 
 //if you not use admin dashboard then these two route will not needed.
 app.use("/v1/admin/", adminRoutes);

@@ -40,13 +40,48 @@ const app = express();
 app.set("trust proxy", 1);
 
 app.use(express.json({ limit: "4mb" }));
-app.use(helmet());
-app.options("*", cors()); // include before other routes
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
+  next();
+});
+
+// Simple CORS configuration - allows all origins
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log(`Handling OPTIONS request for ${req.path}`);
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
+// Also use cors() as backup
 app.use(cors());
+app.use(helmet());
 
 //root route
 app.get("/", (req, res) => {
-  res.send("App works properly!");
+  res.json({ 
+    message: "App works properly!", 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({ 
+    status: "OK", 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
 });
 
 //this for route will need for store front, also for admin dashboard

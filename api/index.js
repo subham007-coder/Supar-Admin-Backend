@@ -86,10 +86,13 @@ app.use("/static", express.static("public"));
 // });
 
 const PORT = process.env.PORT || 5000;
+const HOST = '0.0.0.0'; // Required for Render deployment
 
 // const server = http.createServer(app);
 
-app.listen(PORT, () => console.log(`server running on port ${PORT}`));
+app.listen(PORT, HOST, () => {
+  console.log(`Server running on host ${HOST} and port ${PORT}`);
+});
 
 // app.listen(PORT, () => console.log(`server running on port ${PORT}`));
 

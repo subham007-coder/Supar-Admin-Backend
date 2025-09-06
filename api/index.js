@@ -22,6 +22,9 @@ const languageRoutes = require("../routes/languageRoutes");
 const notificationRoutes = require("../routes/notificationRoutes");
 const bannerRoutes = require("../routes/bannerRoutes");
 const instaPostRoutes = require("../routes/instaPostRoutes");
+const contactRoutes = require("../routes/contactRoutes");
+const contactSubmissionRoutes = require("../routes/contactSubmissionRoutes");
+const appointmentSubmissionRoutes = require("../routes/appointmentSubmissionRoutes");
 const { isAuth, isAdmin } = require("../config/auth");
 // const {
 //   getGlobalSetting,
@@ -60,6 +63,9 @@ app.use("/v1/language/", languageRoutes);
 app.use("/v1/notification/", isAuth, notificationRoutes);
 app.use("/v1/banners/", bannerRoutes);
 app.use("/v1/insta-posts/", instaPostRoutes);
+app.use("/v1/contacts/", contactRoutes);
+app.use("/v1/contact-submissions/", contactSubmissionRoutes);
+app.use("/v1/appointment-submissions/", appointmentSubmissionRoutes);
 
 //if you not use admin dashboard then these two route will not needed.
 app.use("/v1/admin/", adminRoutes);

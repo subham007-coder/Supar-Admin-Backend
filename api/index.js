@@ -137,12 +137,12 @@ app.listen(PORT, HOST, () => {
 //     origin: [
 //       "http://localhost:3000",
 //       "http://localhost:4100",
-//       "https://admin-kachabazar.vercel.app",
+//       "https://admin-ar-lashes.vercel.app",
 //       "https://dashtar-admin.vercel.app",
-//       "https://kachabazar-store.vercel.app",
-//       "https://kachabazar-admin.netlify.app",
+//       "https://ar-lashes-store.vercel.app",
+//       "https://ar-lashes-admin.netlify.app",
 //       "https://dashtar-admin.netlify.app",
-//       "https://kachabazar-store-nine.vercel.app",
+//       "https://ar-lashes-store-nine.vercel.app",
 //     ], //add your origin here instead of this
 //     methods: ["PUT", "GET", "POST", "DELETE", "PATCH", "OPTIONS"],
 //     credentials: false,

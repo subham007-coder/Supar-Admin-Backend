@@ -535,54 +535,99 @@ const deleteShippingAddress = async (req, res) => {
   }
 };
 
+// const updateCustomer = async (req, res) => {
+//   try {
+//     const { name, email, address, phone, image } = req.body;
+
+//     const customer = await Customer.findById(req.params.id);
+//     if (!customer) {
+//       return res.status(404).send({ message: "Customer not found!" });
+//     }
+
+//     const existingCustomer = await Customer.findOne({ email });
+//     if (
+//       existingCustomer &&
+//       existingCustomer._id.toString() !== customer._id.toString()
+//     ) {
+//       return res.status(400).send({ message: "Email already exists." });
+//     }
+
+//     customer.name = name;
+//     customer.email = email;
+//     customer.address = address;
+//     customer.phone = phone;
+//     customer.image = image;
+//     customer.city = city;
+//     customer.country = country;
+
+//     await customer.save();
+
+//     const accessToken = generateAccessToken(customer);
+//     const refreshToken = generateRefreshToken(customer);
+//     await customer.save();
+
+//     res.send({
+//       refreshToken,
+//       token: accessToken,
+//       _id: customer._id,
+//       name: customer.name,
+//       email: customer.email,
+//       address: customer.address,
+//       phone: customer.phone,
+//       image: customer.image,
+//       city: customer.city,
+//       country: customer.country,
+//       message: "Customer updated successfully!",
+//     });
+//   } catch (err) {
+//     res.status(500).send({ message: err.message });
+//   }
+// };
+
+
 const updateCustomer = async (req, res) => {
   try {
-    const { name, email, address, phone, image } = req.body;
+    const { name, email, address, phone, image, city, country } = req.body;
 
     const customer = await Customer.findById(req.params.id);
-    if (!customer) {
-      return res.status(404).send({ message: "Customer not found!" });
-    }
+    if (!customer) return res.status(404).send({ message: "Customer not found!" });
 
     const existingCustomer = await Customer.findOne({ email });
-    if (
-      existingCustomer &&
-      existingCustomer._id.toString() !== customer._id.toString()
-    ) {
+    if (existingCustomer && existingCustomer._id.toString() !== customer._id.toString()) {
       return res.status(400).send({ message: "Email already exists." });
     }
 
-    customer.name = name;
-    customer.email = email;
-    customer.address = address;
-    customer.phone = phone;
-    customer.image = image;
-    customer.city = city;
-    customer.country = country;
+    customer.name = name ?? customer.name;
+    customer.email = email ?? customer.email;
+    customer.address = address ?? customer.address;
+    customer.phone = phone ?? customer.phone;
+    customer.image = image ?? customer.image;
+    customer.city = city ?? customer.city;
+    customer.country = country ?? customer.country;
 
     await customer.save();
 
+    // Either Option 1 or Option 2 here:
+    // ✅ Option 1: Return new tokens
     const accessToken = generateAccessToken(customer);
     const refreshToken = generateRefreshToken(customer);
-    await customer.save();
 
     res.send({
       refreshToken,
       token: accessToken,
-      _id: customer._id,
-      name: customer.name,
-      email: customer.email,
-      address: customer.address,
-      phone: customer.phone,
-      image: customer.image,
-      city: customer.city,
-      country: customer.country,
+      ...customer.toObject(),
       message: "Customer updated successfully!",
     });
+
+    // ❌ OR Option 2: No token regeneration
+    // res.send({ ...customer.toObject(), message: "Customer updated successfully!" });
+
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
 };
+
+
 
 const deleteCustomer = async (req, res) => {
   try {

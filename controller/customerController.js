@@ -557,6 +557,8 @@ const updateCustomer = async (req, res) => {
     customer.address = address;
     customer.phone = phone;
     customer.image = image;
+    customer.city = city;
+    customer.country = country;
 
     await customer.save();
 
@@ -573,6 +575,8 @@ const updateCustomer = async (req, res) => {
       address: customer.address,
       phone: customer.phone,
       image: customer.image,
+      city: customer.city,
+      country: customer.country,
       message: "Customer updated successfully!",
     });
   } catch (err) {

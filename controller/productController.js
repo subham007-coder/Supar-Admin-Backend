@@ -309,7 +309,8 @@ const getShowingStoreProducts = async (req, res) => {
       queryObject.$or = titleQueries;
     }
     if (slug) {
-      queryObject.slug = { $regex: slug, $options: "i" };
+      // Use exact match for slug to avoid partial matches (e.g., 'd-curl' vs 'dd-curl')
+      queryObject.slug = slug;
     }
 
     let products = [];

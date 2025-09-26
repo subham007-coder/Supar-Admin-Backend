@@ -1,5 +1,29 @@
 const mongoose = require("mongoose");
 
+const variantSchema = new mongoose.Schema({
+  length: {
+    type: String,
+    required: true,
+  },
+  curl: {
+    type: String,
+    required: true,
+  },
+  stock: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  sku: {
+    type: String,
+    required: false,
+  },
+  barcode: {
+    type: String,
+    required: false,
+  },
+});
+
 const productSchema = new mongoose.Schema(
   {
     productId: {
@@ -67,7 +91,7 @@ const productSchema = new mongoose.Schema(
         required: false,
       },
     },
-    variants: [{}],
+    variants: [variantSchema],
     isCombination: {
       type: Boolean,
       required: true,

@@ -153,11 +153,24 @@ const getOrderById = async (req, res) => {
 
 const updateOrder = async (req, res) => {
   try {
-    const newStatus = req.body.status;
+    let newStatus = req.body.status;
+    if (typeof newStatus === "string") {
+      // Normalize to Title Case to match enum ["Pending","Processing","Delivered","Cancel"]
+      const lower = newStatus.toLowerCase();
+      const map = {
+        pending: "Pending",
+        processing: "Processing",
+        delivered: "Delivered",
+        cancel: "Cancel",
+        cancelled: "Cancel",
+      };
+      newStatus = map[lower] || newStatus;
+    }
 
     await Order.updateOne(
       { _id: req.params.id },
-      { $set: { status: newStatus } }
+      { $set: { status: newStatus } },
+      { runValidators: true }
     );
 
     res.status(200).send({

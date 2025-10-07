@@ -101,13 +101,21 @@ const isAuth = async (req, res, next) => {
 };
 
 const isAdmin = async (req, res, next) => {
-  const admin = await Admin.findOne({ role: "Admin" });
-  if (admin) {
-    next();
-  } else {
-    res.status(401).send({
-      message: "User is not Admin",
-    });
+  try {
+    if (!req.user?._id) {
+      return res.status(401).send({ message: "Not authenticated" });
+    }
+    const admin = await Admin.findById(req.user._id).select("role");
+    if (!admin) {
+      return res.status(401).send({ message: "User not found" });
+    }
+    const role = (admin.role || '').toLowerCase();
+    if (role === 'admin' || role === 'super admin') {
+      return next();
+    }
+    return res.status(401).send({ message: "User is not Admin" });
+  } catch (err) {
+    return res.status(401).send({ message: "User is not Admin" });
   }
 };
 

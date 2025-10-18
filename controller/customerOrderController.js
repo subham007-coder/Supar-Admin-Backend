@@ -14,6 +14,69 @@ const { handleCreateInvoice } = require("../lib/email-sender/create");
 const { handleProductQuantity } = require("../lib/stock-controller/others");
 const customerInvoiceEmailBody = require("../lib/email-sender/templates/order-to-customer");
 
+// Helper function to send order confirmation email
+const sendOrderConfirmationEmail = async (order) => {
+  try {
+    // Get company settings
+    const storeSetting = await Setting.findOne({ name: "storeSetting" });
+    const companyInfo = storeSetting?.setting || {};
+    
+    // Validate email using MailChecker
+    if (!MailChecker.isValid(order.user_info?.email)) {
+      console.error("Invalid email address for order:", order.user_info?.email);
+      return;
+    }
+
+    // Create PDF invoice
+    const pdf = await handleCreateInvoice(order, `${order.invoice}.pdf`);
+
+    const option = {
+      date: order.createdAt,
+      invoice: order.invoice,
+      status: order.status,
+      method: order.paymentMethod,
+      subTotal: order.subTotal,
+      total: order.total,
+      discount: order.discount,
+      shipping: order.shippingCost,
+      currency: companyInfo.currency || "INR",
+      company_name: companyInfo.company || "AR Lashes",
+      company_address: companyInfo.address || "",
+      company_phone: companyInfo.phone || "",
+      company_email: companyInfo.email || "",
+      company_website: companyInfo.website || "",
+      vat_number: companyInfo.vat_number || "",
+      name: order.user_info?.name,
+      email: order.user_info?.email,
+      phone: order.user_info?.contact,
+      address: order.user_info?.address,
+      cart: order.cart,
+    };
+
+    const emailBody = {
+      from: companyInfo.from_email || "sales@ar-lashes.com",
+      to: order.user_info.email,
+      subject: `Your Order Confirmation - ${order.invoice} at ${companyInfo.company || "AR Lashes"}`,
+      html: customerInvoiceEmailBody(option),
+      attachments: [
+        {
+          filename: `${order.invoice}.pdf`,
+          content: pdf,
+        },
+      ],
+    };
+
+    // Send email using the existing sendEmail function
+    return new Promise((resolve, reject) => {
+      sendEmail(emailBody, { send: resolve }, "Order confirmation email sent successfully");
+    });
+
+  } catch (error) {
+    console.error("Error in sendOrderConfirmationEmail:", error);
+    throw error;
+  }
+};
+
 const addOrder = async (req, res) => {
   // console.log("addOrder", req.body);
   // console.log("req.user._id", req.user._id);
@@ -35,6 +98,14 @@ const addOrder = async (req, res) => {
 
     const order = await newOrder.save();
     // console.log("order", order);
+
+    // 2️⃣ Send order confirmation email to customer
+    try {
+      await sendOrderConfirmationEmail(order);
+    } catch (emailError) {
+      console.error("Failed to send order confirmation email:", emailError);
+      // Don't fail the order creation if email fails
+    }
 
     res.status(201).send(order);
     handleProductQuantity(order.cart);

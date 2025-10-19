@@ -122,11 +122,23 @@ const addOrder = async (req, res) => {
 const createPaymentIntent = async (req, res) => {
   const { total: amount, cardInfo: payment_intent, email } = req.body;
   // console.log("req.body", req.body);
-  // Validate the amount that was passed from the client.
-  if (!(amount >= process.env.MIN_AMOUNT && amount <= process.env.MAX_AMOUNT)) {
-    return res.status(500).json({ message: "Invalid amount." });
-  }
+  
+  // Get store settings for currency and amount validation
   const storeSetting = await Setting.findOne({ name: "storeSetting" });
+  const companyInfo = storeSetting?.setting || {};
+  const currency = companyInfo.currency || "INR";
+  
+  // Set appropriate min/max amounts for INR (in paise for Stripe)
+  const minAmount = currency === "INR" ? 100 : (process.env.MIN_AMOUNT || 50); // ₹1.00 minimum
+  const maxAmount = currency === "INR" ? 10000000 : (process.env.MAX_AMOUNT || 100000); // ₹100,000.00 maximum
+  
+  // Validate the amount that was passed from the client.
+  if (!(amount >= minAmount && amount <= maxAmount)) {
+    return res.status(500).json({ 
+      message: `Invalid amount. Amount must be between ${minAmount} and ${maxAmount} ${currency}.` 
+    });
+  }
+  
   const stripeSecret = storeSetting?.setting?.stripe_secret;
   const stripeInstance = stripe(stripeSecret);
   if (payment_intent.id) {
@@ -139,7 +151,7 @@ const createPaymentIntent = async (req, res) => {
         const updated_intent = await stripeInstance.paymentIntents.update(
           payment_intent.id,
           {
-            amount: formatAmountForStripe(amount, "usd"),
+            amount: formatAmountForStripe(amount, currency.toLowerCase()),
           }
         );
         // console.log("updated_intent", updated_intent);
@@ -158,8 +170,8 @@ const createPaymentIntent = async (req, res) => {
   try {
     // Create PaymentIntent from body params.
     const params = {
-      amount: formatAmountForStripe(amount, "usd"),
-      currency: "usd",
+      amount: formatAmountForStripe(amount, currency.toLowerCase()),
+      currency: currency.toLowerCase(),
       description: process.env.STRIPE_PAYMENT_DESCRIPTION || "",
       automatic_payment_methods: {
         enabled: true,

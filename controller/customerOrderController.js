@@ -16,19 +16,47 @@ const customerInvoiceEmailBody = require("../lib/email-sender/templates/order-to
 
 // Helper function to send order confirmation email
 const sendOrderConfirmationEmail = async (order) => {
+  console.log("🚀 [EMAIL DEBUG] Starting sendOrderConfirmationEmail function");
+  console.log("📦 [EMAIL DEBUG] Order data:", {
+    orderId: order._id,
+    invoice: order.invoice,
+    userEmail: order.user_info?.email,
+    userName: order.user_info?.name,
+    paymentMethod: order.paymentMethod,
+    total: order.total,
+    status: order.status
+  });
+
   try {
     // Get company settings
+    console.log("🔍 [EMAIL DEBUG] Fetching store settings...");
     const storeSetting = await Setting.findOne({ name: "storeSetting" });
     const companyInfo = storeSetting?.setting || {};
     
+    console.log("🏢 [EMAIL DEBUG] Store settings found:", {
+      hasStoreSetting: !!storeSetting,
+      companyInfo: {
+        company: companyInfo.company,
+        email: companyInfo.email,
+        from_email: companyInfo.from_email,
+        currency: companyInfo.currency,
+        address: companyInfo.address,
+        phone: companyInfo.phone
+      }
+    });
+    
     // Validate email using MailChecker
+    console.log("📧 [EMAIL DEBUG] Validating email address:", order.user_info?.email);
     if (!MailChecker.isValid(order.user_info?.email)) {
-      console.error("Invalid email address for order:", order.user_info?.email);
+      console.error("❌ [EMAIL DEBUG] Invalid email address for order:", order.user_info?.email);
       return;
     }
+    console.log("✅ [EMAIL DEBUG] Email address is valid");
 
     // Create PDF invoice
+    console.log("📄 [EMAIL DEBUG] Creating PDF invoice...");
     const pdf = await handleCreateInvoice(order, `${order.invoice}.pdf`);
+    console.log("✅ [EMAIL DEBUG] PDF invoice created, size:", pdf ? pdf.length : 0, "bytes");
 
     const option = {
       date: order.createdAt,
@@ -53,6 +81,15 @@ const sendOrderConfirmationEmail = async (order) => {
       cart: order.cart,
     };
 
+    console.log("📝 [EMAIL DEBUG] Email template options:", {
+      invoice: option.invoice,
+      company_name: option.company_name,
+      company_email: option.company_email,
+      from_email: companyInfo.from_email,
+      currency: option.currency,
+      cartItems: option.cart?.length || 0
+    });
+
     const emailBody = {
       from: companyInfo.from_email || "sales@ar-lashes.com",
       to: order.user_info.email,
@@ -66,29 +103,49 @@ const sendOrderConfirmationEmail = async (order) => {
       ],
     };
 
+    console.log("📨 [EMAIL DEBUG] Email body prepared:", {
+      from: emailBody.from,
+      to: emailBody.to,
+      subject: emailBody.subject,
+      hasHtml: !!emailBody.html,
+      htmlLength: emailBody.html?.length || 0,
+      hasAttachments: emailBody.attachments?.length > 0,
+      attachmentSize: emailBody.attachments?.[0]?.content?.length || 0
+    });
+
     // Send email using the existing sendEmail function
+    console.log("📤 [EMAIL DEBUG] Attempting to send email...");
     return new Promise((resolve, reject) => {
       sendEmail(emailBody, { send: resolve }, "Order confirmation email sent successfully");
     });
 
   } catch (error) {
-    console.error("Error in sendOrderConfirmationEmail:", error);
+    console.error("❌ [EMAIL DEBUG] Error in sendOrderConfirmationEmail:", error);
+    console.error("❌ [EMAIL DEBUG] Error stack:", error.stack);
     throw error;
   }
 };
 
 const addOrder = async (req, res) => {
-  // console.log("addOrder", req.body);
-  // console.log("req.user._id", req.user._id);
+  console.log("🛒 [ORDER DEBUG] Starting addOrder function");
+  console.log("📋 [ORDER DEBUG] Request body:", {
+    user_info: req.body.user_info,
+    paymentMethod: req.body.paymentMethod,
+    total: req.body.total,
+    cartItems: req.body.cart?.length || 0
+  });
+  console.log("👤 [ORDER DEBUG] User ID:", req.user._id);
 
   try {
     // 1️⃣ Get the latest invoice number
+    console.log("🔢 [ORDER DEBUG] Getting latest invoice number...");
     const lastOrder = await Order.findOne({})
       .sort({ invoice: -1 }) // get the order with highest invoice
       .select("invoice")
       .lean();
 
     const nextInvoice = lastOrder ? lastOrder.invoice + 1 : 10000; // start from 10000 if no orders
+    console.log("📄 [ORDER DEBUG] Next invoice number:", nextInvoice);
 
     const newOrder = new Order({
       ...req.body,
@@ -96,21 +153,40 @@ const addOrder = async (req, res) => {
       invoice: nextInvoice,
     });
 
+    console.log("💾 [ORDER DEBUG] Saving order to database...");
     const order = await newOrder.save();
-    // console.log("order", order);
+    console.log("✅ [ORDER DEBUG] Order saved successfully:", {
+      orderId: order._id,
+      invoice: order.invoice,
+      userEmail: order.user_info?.email,
+      total: order.total
+    });
 
     // 2️⃣ Send order confirmation email to customer
+    console.log("📧 [ORDER DEBUG] Attempting to send order confirmation email...");
     try {
       await sendOrderConfirmationEmail(order);
+      console.log("✅ [ORDER DEBUG] Order confirmation email sent successfully");
     } catch (emailError) {
-      console.error("Failed to send order confirmation email:", emailError);
+      console.error("❌ [ORDER DEBUG] Failed to send order confirmation email:", emailError);
+      console.error("❌ [ORDER DEBUG] Email error details:", {
+        message: emailError.message,
+        stack: emailError.stack
+      });
       // Don't fail the order creation if email fails
     }
 
-    res.status(201).send(order);
+    console.log("📦 [ORDER DEBUG] Updating product quantities...");
     handleProductQuantity(order.cart);
+    
+    console.log("🎉 [ORDER DEBUG] Order creation completed successfully");
+    res.status(201).send(order);
   } catch (err) {
-    // console.log("error", err);
+    console.error("❌ [ORDER DEBUG] Error in addOrder:", err);
+    console.error("❌ [ORDER DEBUG] Error details:", {
+      message: err.message,
+      stack: err.stack
+    });
 
     res.status(500).send({
       message: err.message,
@@ -217,15 +293,67 @@ const createOrderByRazorPay = async (req, res) => {
 };
 
 const addRazorpayOrder = async (req, res) => {
+  console.log("💳 [RAZORPAY ORDER DEBUG] Starting addRazorpayOrder function");
+  console.log("📋 [RAZORPAY ORDER DEBUG] Request body:", {
+    user_info: req.body.user_info,
+    paymentMethod: req.body.paymentMethod,
+    total: req.body.total,
+    cartItems: req.body.cart?.length || 0
+  });
+  console.log("👤 [RAZORPAY ORDER DEBUG] User ID:", req.user._id);
+
   try {
+    // 1️⃣ Get the latest invoice number
+    console.log("🔢 [RAZORPAY ORDER DEBUG] Getting latest invoice number...");
+    const lastOrder = await Order.findOne({})
+      .sort({ invoice: -1 }) // get the order with highest invoice
+      .select("invoice")
+      .lean();
+
+    const nextInvoice = lastOrder ? lastOrder.invoice + 1 : 10000; // start from 10000 if no orders
+    console.log("📄 [RAZORPAY ORDER DEBUG] Next invoice number:", nextInvoice);
+
     const newOrder = new Order({
       ...req.body,
       user: req.user._id,
+      invoice: nextInvoice,
     });
+
+    console.log("💾 [RAZORPAY ORDER DEBUG] Saving order to database...");
     const order = await newOrder.save();
-    res.status(201).send(order);
+    console.log("✅ [RAZORPAY ORDER DEBUG] Order saved successfully:", {
+      orderId: order._id,
+      invoice: order.invoice,
+      userEmail: order.user_info?.email,
+      total: order.total
+    });
+
+    // 2️⃣ Send order confirmation email to customer
+    console.log("📧 [RAZORPAY ORDER DEBUG] Attempting to send order confirmation email...");
+    try {
+      await sendOrderConfirmationEmail(order);
+      console.log("✅ [RAZORPAY ORDER DEBUG] Order confirmation email sent successfully");
+    } catch (emailError) {
+      console.error("❌ [RAZORPAY ORDER DEBUG] Failed to send order confirmation email:", emailError);
+      console.error("❌ [RAZORPAY ORDER DEBUG] Email error details:", {
+        message: emailError.message,
+        stack: emailError.stack
+      });
+      // Don't fail the order creation if email fails
+    }
+
+    console.log("📦 [RAZORPAY ORDER DEBUG] Updating product quantities...");
     handleProductQuantity(order.cart);
+    
+    console.log("🎉 [RAZORPAY ORDER DEBUG] Razorpay order creation completed successfully");
+    res.status(201).send(order);
   } catch (err) {
+    console.error("❌ [RAZORPAY ORDER DEBUG] Error in addRazorpayOrder:", err);
+    console.error("❌ [RAZORPAY ORDER DEBUG] Error details:", {
+      message: err.message,
+      stack: err.stack
+    });
+
     res.status(500).send({
       message: err.message,
     });

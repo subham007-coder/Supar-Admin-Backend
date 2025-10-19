@@ -94,7 +94,7 @@ const sendOrderConfirmationEmail = async (order) => {
       company_phone: companyInfo.phone || "",
       company_email: companyInfo.email || "",
       company_website: companyInfo.website || "",
-      vat_number: companyInfo.vat_number || "",
+      vat_number: companyInfo.vat_number || "695897456321",
       name: order.user_info?.name,
       email: order.user_info?.email,
       phone: order.user_info?.contact,
@@ -109,6 +109,20 @@ const sendOrderConfirmationEmail = async (order) => {
       from_email: companyInfo.from_email,
       currency: option.currency,
       cartItems: option.cart?.length || 0
+    });
+
+    // Debug cart data structure
+    console.log("🛒 [EMAIL DEBUG] Cart data structure:", {
+      cartLength: option.cart?.length || 0,
+      cartItems: option.cart?.map((item, index) => ({
+        index: index,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+        selectedLength: item.selectedLength,
+        selectedCurl: item.selectedCurl,
+        selectedColor: item.selectedColor
+      })) || []
     });
 
     const emailBody = {

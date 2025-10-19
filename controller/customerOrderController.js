@@ -44,6 +44,27 @@ const sendOrderConfirmationEmail = async (order) => {
         phone: companyInfo.phone
       }
     });
+
+    // If store settings are empty, use fallback values
+    if (!companyInfo.company || !companyInfo.email || !companyInfo.from_email) {
+      console.log("⚠️ [EMAIL DEBUG] Store settings incomplete, using fallback values");
+      companyInfo.company = companyInfo.company || "AR Lashes";
+      companyInfo.email = companyInfo.email || "subham.growstara@gmail.com";
+      companyInfo.from_email = companyInfo.from_email || "subham.growstara@gmail.com";
+      companyInfo.currency = companyInfo.currency || "INR";
+      companyInfo.address = companyInfo.address || "Ashoknager, India";
+      companyInfo.phone = companyInfo.phone || "+91 7867675646";
+      companyInfo.website = companyInfo.website || "https://ar-lashes.com";
+      
+      console.log("🔄 [EMAIL DEBUG] Updated company info with fallbacks:", {
+        company: companyInfo.company,
+        email: companyInfo.email,
+        from_email: companyInfo.from_email,
+        currency: companyInfo.currency,
+        address: companyInfo.address,
+        phone: companyInfo.phone
+      });
+    }
     
     // Validate email using MailChecker
     console.log("📧 [EMAIL DEBUG] Validating email address:", order.user_info?.email);
@@ -91,7 +112,7 @@ const sendOrderConfirmationEmail = async (order) => {
     });
 
     const emailBody = {
-      from: companyInfo.from_email || "sales@ar-lashes.com",
+      from: companyInfo.from_email || "subham.growstara@gmail.com",
       to: order.user_info.email,
       subject: `Your Order Confirmation - ${order.invoice} at ${companyInfo.company || "AR Lashes"}`,
       html: customerInvoiceEmailBody(option),

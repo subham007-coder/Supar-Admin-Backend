@@ -212,7 +212,17 @@ const addOrder = async (req, res) => {
     }
 
     console.log("📦 [ORDER DEBUG] Updating product quantities...");
-    handleProductQuantity(order.cart);
+    try {
+      await handleProductQuantity(order.cart);
+      console.log("✅ [ORDER DEBUG] Product quantities updated successfully");
+    } catch (stockError) {
+      console.error("❌ [ORDER DEBUG] Stock update failed:", stockError.message);
+      // Rollback the order if stock update fails
+      await Order.findByIdAndDelete(order._id);
+      return res.status(400).send({
+        message: `Order failed: ${stockError.message}`
+      });
+    }
     
     console.log("🎉 [ORDER DEBUG] Order creation completed successfully");
     res.status(201).send(order);
@@ -378,7 +388,17 @@ const addRazorpayOrder = async (req, res) => {
     }
 
     console.log("📦 [RAZORPAY ORDER DEBUG] Updating product quantities...");
-    handleProductQuantity(order.cart);
+    try {
+      await handleProductQuantity(order.cart);
+      console.log("✅ [RAZORPAY ORDER DEBUG] Product quantities updated successfully");
+    } catch (stockError) {
+      console.error("❌ [RAZORPAY ORDER DEBUG] Stock update failed:", stockError.message);
+      // Rollback the order if stock update fails
+      await Order.findByIdAndDelete(order._id);
+      return res.status(400).send({
+        message: `Order failed: ${stockError.message}`
+      });
+    }
     
     console.log("🎉 [RAZORPAY ORDER DEBUG] Razorpay order creation completed successfully");
     res.status(201).send(order);

@@ -190,7 +190,9 @@ const updateProduct = async (req, res) => {
     title: req.body.title,
     description: req.body.description,
     shortDescription: req.body.shortDescription,
-    hasShortDescription: !!req.body.shortDescription
+    hasShortDescription: !!req.body.shortDescription,
+    variants: req.body.variants,
+    totalStock: req.body.totalStock
   });
 
   try {
@@ -212,6 +214,34 @@ const updateProduct = async (req, res) => {
         console.log('✅ [PRODUCT DEBUG] Updated shortDescription:', product.shortDescription);
       }
 
+      // Handle variants and total stock validation
+      if (req.body.variants !== undefined) {
+        product.variants = req.body.variants;
+        
+        // Calculate total variant stock
+        const totalVariantStock = req.body.variants.reduce((sum, variant) => {
+          return sum + (variant.stock || 0);
+        }, 0);
+        
+        console.log('📊 [PRODUCT DEBUG] Variant stock calculation:', {
+          totalVariantStock,
+          totalStock: req.body.totalStock,
+          variants: req.body.variants.map(v => ({ length: v.length, curl: v.curl, stock: v.stock }))
+        });
+        
+        // Validate that variant stock sum equals total stock
+        if (req.body.totalStock !== undefined && totalVariantStock !== req.body.totalStock) {
+          return res.status(400).send({
+            message: `Variant quantities must sum to total stock. Expected: ${req.body.totalStock}, Got: ${totalVariantStock}`
+          });
+        }
+        
+        // Update total stock
+        if (req.body.totalStock !== undefined) {
+          product.totalStock = req.body.totalStock;
+        }
+      }
+
       // Update other fields
       if (req.body.productId !== undefined) product.productId = req.body.productId;
       if (req.body.sku !== undefined) product.sku = req.body.sku;
@@ -221,7 +251,6 @@ const updateProduct = async (req, res) => {
       if (req.body.category !== undefined) product.category = req.body.category;
       if (req.body.show !== undefined) product.show = req.body.show;
       if (req.body.isCombination !== undefined) product.isCombination = req.body.isCombination;
-      if (req.body.variants !== undefined) product.variants = req.body.variants;
       if (req.body.stock !== undefined) product.stock = req.body.stock;
       if (req.body.prices !== undefined) product.prices = req.body.prices;
       if (req.body.image !== undefined) product.image = req.body.image;
@@ -232,6 +261,7 @@ const updateProduct = async (req, res) => {
       
       console.log('✅ [PRODUCT DEBUG] Product updated successfully');
       console.log('📋 [PRODUCT DEBUG] Final shortDescription:', product.shortDescription);
+      console.log('📊 [PRODUCT DEBUG] Final totalStock:', product.totalStock);
       
       res.send({ data: product, message: "Product updated successfully!" });
     } else {

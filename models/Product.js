@@ -50,6 +50,11 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: false,
     },
+    totalStock: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
 
     sales: {
       type: Number,

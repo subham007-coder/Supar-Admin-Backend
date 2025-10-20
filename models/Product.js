@@ -22,6 +22,10 @@ const productSchema = new mongoose.Schema(
       type: Object,
       required: false,
     },
+    shortDescription: {
+      type: Object,
+      required: false,
+    },
     slug: {
       type: String,
       required: true,
@@ -70,7 +74,7 @@ const productSchema = new mongoose.Schema(
     variants: [{
       length: {
         type: String,
-        enum: ['8mm', '9mm', '10mm', '11mm', '12mm', '13mm'],
+        enum: ['8mm', '9mm', '10mm', '11mm', '12mm', '13mm', '14mm', '15mm', 'Max'],
         required: true
       },
       curl: {

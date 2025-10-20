@@ -46,10 +46,9 @@ const productSchema = new mongoose.Schema(
       type: Array,
       required: false,
     },
-    totalStock: {
+    stock: {
       type: Number,
       required: false,
-      default: 0,
     },
 
     sales: {

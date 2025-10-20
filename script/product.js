@@ -20,7 +20,7 @@ const updateManyProducts = async () => {
         categories: el.categories,
         category: el.category,
         image: el.image,
-        totalStock: el.totalStock || el.stock || 0,
+        stock: el.stock,
         status: el.status,
         isCombination: el.isCombination,
         prices: {

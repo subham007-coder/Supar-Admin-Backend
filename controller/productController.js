@@ -232,7 +232,19 @@ const updateProduct = async (req, res) => {
       }
 
       if (req.body.variants) {
-        product.variants = req.body.variants;
+        // Ensure each variant has the required curl and length fields
+        const processedVariants = req.body.variants.map(variant => {
+          // Make sure curl and length are set (required fields)
+          return {
+            ...variant,
+            curl: variant.curl || 'D', // Default to 'D' if not provided
+            length: variant.length || '10mm', // Default to '10mm' if not provided
+            stock: variant.stock || 0,
+            enabled: variant.enabled !== undefined ? variant.enabled : true
+          };
+        });
+        
+        product.variants = processedVariants;
         console.log('✅ [PRODUCT DEBUG] Updated variants:', product.variants);
       }
 

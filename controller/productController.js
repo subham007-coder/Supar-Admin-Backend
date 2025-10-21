@@ -22,13 +22,15 @@ const addProduct = async (req, res) => {
       // Ensure translatable fields are objects
       title: req.body.title || {},
       description: req.body.description || {},
-      shortDescription: req.body.shortDescription || {}
+      shortDescription: req.body.shortDescription || {},
+      variants: req.body.variants || [],
     };
 
     console.log('Creating product with data:', {
       title: productData.title,
       description: productData.description,
-      shortDescription: productData.shortDescription
+      shortDescription: productData.shortDescription,
+      variants: productData.variants,
     });
 
     const newProduct = new Product(productData);
@@ -190,7 +192,9 @@ const updateProduct = async (req, res) => {
     title: req.body.title,
     description: req.body.description,
     shortDescription: req.body.shortDescription,
-    hasShortDescription: !!req.body.shortDescription
+    hasShortDescription: !!req.body.shortDescription,
+    variants: req.body.variants,
+    hasVariants: !!req.body.variants,
   });
 
   try {
@@ -210,6 +214,11 @@ const updateProduct = async (req, res) => {
       if (req.body.shortDescription) {
         product.shortDescription = { ...product.shortDescription, ...req.body.shortDescription };
         console.log('✅ [PRODUCT DEBUG] Updated shortDescription:', product.shortDescription);
+      }
+
+      if (req.body.variants) {
+        product.variants = req.body.variants;
+        console.log('✅ [PRODUCT DEBUG] Updated variants:', product.variants);
       }
 
       // Update other fields
@@ -232,6 +241,7 @@ const updateProduct = async (req, res) => {
       
       console.log('✅ [PRODUCT DEBUG] Product updated successfully');
       console.log('📋 [PRODUCT DEBUG] Final shortDescription:', product.shortDescription);
+      console.log('📋 [PRODUCT DEBUG] Final variants:', product.variants);
       
       res.send({ data: product, message: "Product updated successfully!" });
     } else {

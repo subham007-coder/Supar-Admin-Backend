@@ -74,7 +74,7 @@ const productSchema = new mongoose.Schema(
     variants: [{
       length: {
         type: String,
-        enum: ['8mm', '9mm', '10mm', '11mm', '12mm', '13mm', '14mm', '15mm', 'Max'],
+        enum: ['8mm', '9mm', '10mm', '11mm', '12mm', '13mm', '14mm', '15mm', 'Mix'],
         required: true
       },
       curl: {

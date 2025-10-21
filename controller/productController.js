@@ -24,14 +24,19 @@ const addProduct = async (req, res) => {
       description: req.body.description || {},
       shortDescription: req.body.shortDescription || {},
       variants: req.body.variants || [],
+      isCombination: req.body.variants && req.body.variants.length > 0 ? true : req.body.isCombination,
     };
 
     console.log('Creating product with data:', {
       title: productData.title,
-      description: productData.description,
-      shortDescription: productData.shortDescription,
+      isCombination: productData.isCombination,
       variants: productData.variants,
     });
+    
+    // Log the full variants data for debugging
+    if (productData.variants && productData.variants.length > 0) {
+      console.log('Variants data:', JSON.stringify(productData.variants));
+    }
 
     const newProduct = new Product(productData);
     const product = await newProduct.save();

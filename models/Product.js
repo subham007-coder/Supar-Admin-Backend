@@ -71,27 +71,27 @@ const productSchema = new mongoose.Schema(
         required: false,
       },
     },
-    // variants: [{
-    //   length: {
-    //     type: String,
-    //     enum: ['8mm', '9mm', '10mm', '11mm', '12mm', '13mm', '14mm', '15mm', 'Mix'],
-    //     required: true
-    //   },
-    //   curl: {
-    //     type: String,
-    //     enum: ['C', 'D', 'DD'],
-    //     required: true
-    //   },
-    //   stock: {
-    //     type: Number,
-    //     default: 0,
-    //     min: 0
-    //   },
-    //   enabled: {
-    //     type: Boolean,
-    //     default: true
-    //   }
-    // }],
+    variants: [{
+      length: {
+        type: String,
+        enum: ['8mm', '9mm', '10mm', '11mm', '12mm', '13mm', '14mm', '15mm', 'Mix'],
+        required: true
+      },
+      curl: {
+        type: String,
+        enum: ['C', 'D', 'DD'],
+        required: true
+      },
+      stock: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      enabled: {
+        type: Boolean,
+        default: false
+      }
+    }],
     isCombination: {
       type: Boolean,
       required: true,

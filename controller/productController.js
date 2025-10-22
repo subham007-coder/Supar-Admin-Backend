@@ -6,10 +6,6 @@ const { languageCodes } = require("../utils/data");
 
 const addProduct = async (req, res) => {
   try {
-    console.log('DEBUG - addProduct - Request body:', JSON.stringify(req.body));
-    console.log('DEBUG - addProduct - Request body variants:', JSON.stringify(req.body.variants));
-    console.log('DEBUG - addProduct - Request body isCombination:', req.body.isCombination);
-    
     // Get the English title or the first available title
     const title = req.body.title.en || Object.values(req.body.title)[0];
     
@@ -26,30 +22,17 @@ const addProduct = async (req, res) => {
       // Ensure translatable fields are objects
       title: req.body.title || {},
       description: req.body.description || {},
-      shortDescription: req.body.shortDescription || {},
-      variants: req.body.variants || [],
-      isCombination: req.body.variants && req.body.variants.length > 0 ? true : req.body.isCombination,
+      shortDescription: req.body.shortDescription || {}
     };
 
-    console.log('DEBUG - addProduct - Creating product with data:', {
+    console.log('Creating product with data:', {
       title: productData.title,
-      isCombination: productData.isCombination,
-      variants: productData.variants,
+      description: productData.description,
+      shortDescription: productData.shortDescription
     });
-    
-    // Log the full variants data for debugging
-    if (productData.variants && productData.variants.length > 0) {
-      console.log('DEBUG - addProduct - Variants data:', JSON.stringify(productData.variants));
-    } else {
-      console.log('DEBUG - addProduct - No variants found in request or variants array is empty');
-      console.log('DEBUG - addProduct - Raw variants from request:', req.body.variants);
-      console.log('DEBUG - addProduct - Type of variants:', typeof req.body.variants);
-    }
 
     const newProduct = new Product(productData);
-    console.log('DEBUG - addProduct - Product model before save:', JSON.stringify(newProduct));
     const product = await newProduct.save();
-    console.log('DEBUG - addProduct - Saved product:', JSON.stringify(product));
     res.status(201).send(product);
     
   } catch (err) {
@@ -207,9 +190,7 @@ const updateProduct = async (req, res) => {
     title: req.body.title,
     description: req.body.description,
     shortDescription: req.body.shortDescription,
-    hasShortDescription: !!req.body.shortDescription,
-    variants: req.body.variants,
-    hasVariants: !!req.body.variants,
+    hasShortDescription: !!req.body.shortDescription
   });
 
   try {
@@ -229,11 +210,6 @@ const updateProduct = async (req, res) => {
       if (req.body.shortDescription) {
         product.shortDescription = { ...product.shortDescription, ...req.body.shortDescription };
         console.log('✅ [PRODUCT DEBUG] Updated shortDescription:', product.shortDescription);
-      }
-
-      if (req.body.variants) {
-        product.variants = req.body.variants;
-        console.log('✅ [PRODUCT DEBUG] Updated variants:', product.variants);
       }
 
       // Update other fields
@@ -256,7 +232,6 @@ const updateProduct = async (req, res) => {
       
       console.log('✅ [PRODUCT DEBUG] Product updated successfully');
       console.log('📋 [PRODUCT DEBUG] Final shortDescription:', product.shortDescription);
-      console.log('📋 [PRODUCT DEBUG] Final variants:', product.variants);
       
       res.send({ data: product, message: "Product updated successfully!" });
     } else {

@@ -92,6 +92,7 @@ const productSchema = new mongoose.Schema(
     //     default: true
     //   }
     // }],
+    variants: [{}],
     isCombination: {
       type: Boolean,
       required: true,

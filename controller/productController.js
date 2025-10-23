@@ -8,38 +8,38 @@ const addProduct = async (req, res) => {
   try {
     // Get the English title or the first available title
     const title = req.body.title.en || Object.values(req.body.title)[0];
-    
+
     if (!title) {
       return res.status(400).send({
-        message: "Product title is required"
+        message: "Product title is required",
       });
     }
 
     // Ensure all translatable fields are properly structured
     const productData = {
       ...req.body,
-      slug: title.toLowerCase().replace(/[^A-Z0-9]+/ig, '-'),
+      slug: title.toLowerCase().replace(/[^A-Z0-9]+/gi, "-"),
       // Ensure translatable fields are objects
       title: req.body.title || {},
       description: req.body.description || {},
-      shortDescription: req.body.shortDescription || {}
+      shortDescription: req.body.shortDescription || {},
+      keyFeatures: req.body.keyFeatures || [],
     };
 
-    console.log('Creating product with data:', {
+    console.log("Creating product with data:", {
       title: productData.title,
       description: productData.description,
-      shortDescription: productData.shortDescription
+      shortDescription: productData.shortDescription,
     });
 
     const newProduct = new Product(productData);
     const product = await newProduct.save();
     res.status(201).send(product);
-    
   } catch (err) {
-    console.error('Product creation error:', err);
+    console.error("Product creation error:", err);
     res.status(500).send({
-      message: err.message || 'Error occurred while creating product',
-      error: err
+      message: err.message || "Error occurred while creating product",
+      error: err,
     });
   }
 };
@@ -127,29 +127,30 @@ const getAllProducts = async (req, res) => {
     const totalDoc = await Product.countDocuments(queryObject);
 
     let products = await Product.find(queryObject)
-  .populate({ path: "category", select: "_id name" })
-  .populate({ path: "categories", select: "_id name" })
-  .sort(sortObject)
-  .skip(skip)
-  .limit(limits);
+      .populate({ path: "category", select: "_id name" })
+      .populate({ path: "categories", select: "_id name" })
+      .sort(sortObject)
+      .skip(skip)
+      .limit(limits);
 
-// Convert discount to percentage for each product
-products = products.map((product) => {
-  if (product.prices?.originalPrice && product.prices?.price) {
-    const original = product.prices.originalPrice;
-    const current = product.prices.price;
-    product.prices.discount = Math.round(((original - current) / original) * 100);
-  }
-  return product;
-});
+    // Convert discount to percentage for each product
+    products = products.map((product) => {
+      if (product.prices?.originalPrice && product.prices?.price) {
+        const original = product.prices.originalPrice;
+        const current = product.prices.price;
+        product.prices.discount = Math.round(
+          ((original - current) / original) * 100
+        );
+      }
+      return product;
+    });
 
-res.send({
-  products,
-  totalDoc,
-  limits,
-  pages,
-});
-
+    res.send({
+      products,
+      totalDoc,
+      limits,
+      pages,
+    });
   } catch (err) {
     // console.log("error", err);
     res.status(500).send({
@@ -185,12 +186,12 @@ const getProductById = async (req, res) => {
 };
 
 const updateProduct = async (req, res) => {
-  console.log('🔄 [PRODUCT DEBUG] Updating product:', req.params.id);
-  console.log('📝 [PRODUCT DEBUG] Update data:', {
+  console.log("🔄 [PRODUCT DEBUG] Updating product:", req.params.id);
+  console.log("📝 [PRODUCT DEBUG] Update data:", {
     title: req.body.title,
     description: req.body.description,
     shortDescription: req.body.shortDescription,
-    hasShortDescription: !!req.body.shortDescription
+    hasShortDescription: !!req.body.shortDescription,
   });
 
   try {
@@ -201,26 +202,41 @@ const updateProduct = async (req, res) => {
       if (req.body.title) {
         product.title = { ...product.title, ...req.body.title };
       }
-      
+
       if (req.body.description) {
-        product.description = { ...product.description, ...req.body.description };
+        product.description = {
+          ...product.description,
+          ...req.body.description,
+        };
       }
 
       // Handle shortDescription - this was missing!
       if (req.body.shortDescription) {
-        product.shortDescription = { ...product.shortDescription, ...req.body.shortDescription };
-        console.log('✅ [PRODUCT DEBUG] Updated shortDescription:', product.shortDescription);
+        product.shortDescription = {
+          ...product.shortDescription,
+          ...req.body.shortDescription,
+        };
+        console.log(
+          "✅ [PRODUCT DEBUG] Updated shortDescription:",
+          product.shortDescription
+        );
       }
+      // Key Features
+      if (req.body.keyFeatures !== undefined)
+        product.keyFeatures = req.body.keyFeatures;
 
       // Update other fields
-      if (req.body.productId !== undefined) product.productId = req.body.productId;
+      if (req.body.productId !== undefined)
+        product.productId = req.body.productId;
       if (req.body.sku !== undefined) product.sku = req.body.sku;
       if (req.body.barcode !== undefined) product.barcode = req.body.barcode;
       if (req.body.slug !== undefined) product.slug = req.body.slug;
-      if (req.body.categories !== undefined) product.categories = req.body.categories;
+      if (req.body.categories !== undefined)
+        product.categories = req.body.categories;
       if (req.body.category !== undefined) product.category = req.body.category;
       if (req.body.show !== undefined) product.show = req.body.show;
-      if (req.body.isCombination !== undefined) product.isCombination = req.body.isCombination;
+      if (req.body.isCombination !== undefined)
+        product.isCombination = req.body.isCombination;
       if (req.body.variants !== undefined) product.variants = req.body.variants;
       if (req.body.stock !== undefined) product.stock = req.body.stock;
       if (req.body.prices !== undefined) product.prices = req.body.prices;
@@ -230,9 +246,6 @@ const updateProduct = async (req, res) => {
 
       await product.save();
       
-      console.log('✅ [PRODUCT DEBUG] Product updated successfully');
-      console.log('📋 [PRODUCT DEBUG] Final shortDescription:', product.shortDescription);
-      
       res.send({ data: product, message: "Product updated successfully!" });
     } else {
       res.status(404).send({
@@ -240,7 +253,7 @@ const updateProduct = async (req, res) => {
       });
     }
   } catch (err) {
-    console.error('❌ [PRODUCT DEBUG] Update error:', err);
+    console.error("❌ [PRODUCT DEBUG] Update error:", err);
     res.status(404).send(err.message);
   }
 };
@@ -291,7 +304,7 @@ const updateStatus = async (req, res) => {
         },
       }
     );
-    
+
     res.status(200).send({
       message: `Product ${newStatus} Successfully!`,
     });

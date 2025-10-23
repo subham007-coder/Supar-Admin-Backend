@@ -26,6 +26,12 @@ const productSchema = new mongoose.Schema(
       type: Object,
       required: false,
     },
+    // Add Key Features here
+    keyFeatures: {
+      type: [String],
+      required: false,
+      default: [],
+    },
     slug: {
       type: String,
       required: true,

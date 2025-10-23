@@ -110,8 +110,8 @@ const admins = [
       "products",
       "product",
       "categories",
-      "attributes",
-      "coupons",
+      // "attributes", Before HandOver Must Remove This all page/operation access
+      // "coupons",
       "orders",
       "order",
       "our-staff",
@@ -122,10 +122,11 @@ const admins = [
       "customization",
       "store-settings",
       "notifications",
-      "edit-profile",
+      // "edit-profile",
       "coming-soon",
       "customers",
       "customer-order",
+      "appointments"
     ],
   },
 ];

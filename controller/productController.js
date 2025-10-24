@@ -4,6 +4,15 @@ const Category = require("../models/Category");
 const Review = require("../models/Review");
 const { languageCodes } = require("../utils/data");
 
+const formatRecommendedFor = (arr) => {
+  if (!Array.isArray(arr)) return [];
+  return arr.map((item) =>
+    typeof item === "string"
+      ? { name: item, checked: true }
+      : { name: item.name, checked: item.checked ?? true }
+  );
+};
+
 const addProduct = async (req, res) => {
   try {
     // Get the English title or the first available title
@@ -24,7 +33,7 @@ const addProduct = async (req, res) => {
       description: req.body.description || {},
       shortDescription: req.body.shortDescription || {},
       keyFeatures: req.body.keyFeatures || [],
-      recommendedFor: req.body.recommendedFor || [],
+      recommendedFor: formatRecommendedFor(req.body.recommendedFor),
     };
 
     console.log("Creating product with data:", {
@@ -225,10 +234,10 @@ const updateProduct = async (req, res) => {
       // Key Features
       if (req.body.keyFeatures !== undefined)
         product.keyFeatures = req.body.keyFeatures;
-      
+
       // Recommended For
       if (req.body.recommendedFor !== undefined)
-        product.recommendedFor = req.body.recommendedFor;
+    product.recommendedFor = formatRecommendedFor(req.body.recommendedFor);
       // Update other fields
       if (req.body.productId !== undefined)
         product.productId = req.body.productId;

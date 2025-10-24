@@ -24,6 +24,7 @@ const addProduct = async (req, res) => {
       description: req.body.description || {},
       shortDescription: req.body.shortDescription || {},
       keyFeatures: req.body.keyFeatures || [],
+      recommendedFor: req.body.recommendedFor || [],
     };
 
     console.log("Creating product with data:", {
@@ -224,7 +225,10 @@ const updateProduct = async (req, res) => {
       // Key Features
       if (req.body.keyFeatures !== undefined)
         product.keyFeatures = req.body.keyFeatures;
-
+      
+      // Recommended For
+      if (req.body.recommendedFor !== undefined)
+        product.recommendedFor = req.body.recommendedFor;
       // Update other fields
       if (req.body.productId !== undefined)
         product.productId = req.body.productId;
@@ -245,7 +249,7 @@ const updateProduct = async (req, res) => {
       if (req.body.status !== undefined) product.status = req.body.status;
 
       await product.save();
-      
+
       res.send({ data: product, message: "Product updated successfully!" });
     } else {
       res.status(404).send({

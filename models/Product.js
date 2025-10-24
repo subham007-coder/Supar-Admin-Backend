@@ -61,16 +61,9 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: false,
     },
-    tag: {
-      type: [String],
-      required: false,
-      default: [],
-    },
-    recommendedFor: {
-      type: [String],
-      required: false,
-      default: [],
-    },
+
+    tag: [String],
+    recommendedFor: [String],
     prices: {
       originalPrice: {
         type: Number,

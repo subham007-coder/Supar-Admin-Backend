@@ -63,14 +63,7 @@ const productSchema = new mongoose.Schema(
     },
 
     tag: [String],
-    // recommendedFor: [String],
-    recommendedFor: [
-  {
-    name: { type: String, required: true },
-    checked: { type: Boolean, default: true },
-  }
-],
-
+    recommendedFor: [String],
     prices: {
       originalPrice: {
         type: Number,
